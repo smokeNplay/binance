@@ -4,8 +4,11 @@ module Binance
   module Client
     # Public: Client with methods mirroring the Binance WebSocket API
     class WebSocket
+      def initialize(testnet: false)
+        @base_url = testnet ? 'wss://testnet.binance.vision/ws' : 'wss://stream.binance.com:9443'
+      end
+
       # Public: String base url for WebSocket client to use
-      BASE_URL = 'wss://stream.binance.com:9443'.freeze
 
       # Public: Create a single WebSocket stream
       #
@@ -22,7 +25,7 @@ module Binance
       #   :error   - The Proc called when a stream receives an error (optional)
       #   :close   - The Proc called when a stream is closed (optional)
       def single(stream:, methods:)
-        create_stream("#{BASE_URL}/ws/#{stream_url(**stream)}",
+        create_stream("#{@base_url}/ws/#{stream_url(**stream)}",
                       methods: methods)
       end
 
@@ -43,7 +46,7 @@ module Binance
       #   :close   - The Proc called when a stream is closed (optional)
       def multi(streams:, methods:)
         names = streams.map { |stream| stream_url(**stream) }
-        create_stream("#{BASE_URL}/stream?streams=#{names.join('/')}",
+        create_stream("#{@base_url}/stream?streams=#{names.join('/')}",
                       methods: methods)
       end
 
@@ -164,7 +167,7 @@ module Binance
       #   :error   - The Proc called when a stream receives an error (optional)
       #   :close   - The Proc called when a stream is closed (optional)
       def user_data(listen_key:, methods:)
-        create_stream "#{BASE_URL}/ws/#{listen_key}", methods: methods
+        create_stream "#{@base_url}/ws/#{listen_key}", methods: methods
       end
 
       private

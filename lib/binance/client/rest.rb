@@ -9,10 +9,12 @@ require_relative 'rest/methods'
 module Binance
   module Client
     class REST
-      BASE_URL = 'https://api.binance.com'.freeze
+      PRODUCTION_URL = 'https://api.binance.com'.freeze
+      TESTNET_URL = 'https://testnet.binance.vision'.freeze
 
       def initialize(api_key: '', secret_key: '',
-                     adapter: Faraday.default_adapter)
+                     adapter: Faraday.default_adapter, testnet: false)
+        @testnet = testnet
         @clients = {}
         @clients[:public]   = public_client adapter
         @clients[:verified] = verified_client api_key, adapter
@@ -25,7 +27,7 @@ module Binance
         define_method(method[:name]) do |options = {}|
           response = @clients[method[:client]].send(method[:action]) do |req|
             req.url ENDPOINTS[method[:endpoint]]
-            req.params.merge! options.map { |k, v| [camelize(k.to_s), v] }.to_h
+            req.params.merge!(options.transform_keys { |k| camelize(k.to_s) })
           end
           response.body
         end
@@ -40,6 +42,10 @@ module Binance
       def camelize(str)
         str.split('_')
            .map.with_index { |word, i| i.zero? ? word : word.capitalize }.join
+      end
+
+      def base_url
+        @testnet ? TESTNET_URL : PRODUCTION_URL
       end
     end
   end
